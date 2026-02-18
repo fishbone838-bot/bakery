@@ -32,23 +32,37 @@
 
 <p id="msg"></p>
 
-<script type="module">
-import { createOrder } from "./main.js";
+<!-- Firebase CDN -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
+<script src="./main.js"></script>
+
+<script>
 const form = document.getElementById("orderForm");
 
-form.addEventListener("submit", async (e) => {
+form.addEventListener("submit", async (e)=>{
+
   e.preventDefault();
 
   const data = {
-    name: document.getElementById("name").value,
-    phone: document.getElementById("phone").value,
-    amount: Number(document.getElementById("amount").value)
+    name: name.value,
+    phone: phone.value,
+    amount: Number(amount.value)
   };
 
-  document.getElementById("msg").innerText = "送出中...";
+  msg.innerText = "送出中...";
 
-  const number = await createOrder(data);
+  try{
+    const no = await createOrder(data);
 
-  location.href = `/success.html?no=${number}`;
-}
+    location.href=`/success.html?no=${no}`;
+
+  }catch(err){
+    alert("送出失敗："+err.message);
+    console.error(err);
+  }
+
+});
+</script>
+

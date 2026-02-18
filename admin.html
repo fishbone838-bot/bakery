@@ -24,19 +24,25 @@
 <tbody id="list"></tbody>
 </table>
 
-<script type="module">
-import { getOrders, updateStatus } from "./main.js";
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-async function load() {
+<script src="./main.js"></script>
+
+<script>
+async function load(){
+
   const orders = await getOrders();
-  const list = document.getElementById("list");
 
-  list.innerHTML = "";
+  const list=document.getElementById("list");
 
-  orders.forEach(o => {
-    const tr = document.createElement("tr");
+  list.innerHTML="";
 
-    tr.innerHTML = `
+  orders.forEach(o=>{
+
+    const tr=document.createElement("tr");
+
+    tr.innerHTML=`
       <td>${o.number}</td>
       <td>${o.name}</td>
       <td>${o.phone}</td>
@@ -51,6 +57,7 @@ async function load() {
     `;
 
     list.appendChild(tr);
+
   });
 
   document.querySelectorAll("select").forEach(s=>{
@@ -62,6 +69,7 @@ async function load() {
 
 load();
 </script>
+
 
 </body>
 </html>

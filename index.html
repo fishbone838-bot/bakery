@@ -160,6 +160,14 @@
       text-align: center
     }
 
+    /* 讓 #msg 外觀與 .subtitle 一致 */
+    #msg {
+      margin: 0 0 18px;
+      color: #6b6156;
+      font-size: 16px;
+      text-align: center;
+    }
+
     /* responsive */
     @media (max-width:420px) {
       body {
@@ -202,7 +210,7 @@
         <input type="number" id="amount" min="1" value="1" required>
       </div>
 
-      <button class="submit" type="submit" id="submitBtn">立即訂位</button>
+      <button class="submit" type="submit" id="submitBtn">立即預約</button>
     </form>
 
     <p id="msg"></p>
@@ -279,8 +287,8 @@
         };
 
         submitBtn.disabled = true;
-        msg.innerText = "🚀 訂單傳送中，請稍候...";
-        msg.style.color = "blue";
+        msg.innerText = "訂單傳送中，請稍候...";
+        msg.classList.add('subtitle');
 
         try {
           // 呼叫 main.js 裡的建立訂單功能
@@ -290,6 +298,7 @@
         } catch (err) {
           alert("預約失敗，請聯絡店家：" + err.message);
           msg.innerText = "";
+          msg.classList.remove('subtitle');
           submitBtn.disabled = false;
         }
       });

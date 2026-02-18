@@ -1,148 +1,282 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>草莓大福後台管理</title>
   <style>
-    body { font-family: sans-serif; padding: 20px; background-color: #f9f9f9; }
-    .admin-panel { background: #fff0f5; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #ffb6c1; }
-    table { width: 100%; border-collapse: collapse; background: white; }
-    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-    th { background-color: #ff69b4; color: white; }
-    tr:nth-child(even) { background-color: #f2f2f2; }
+    :root {
+      --wood: #8E744A;
+      --deep: #1f1a16;
+      --beige: #f6f1e8;
+      --input-border: rgba(0, 0, 0, 0.08);
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      font-family: 'Noto Sans TC', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+      color: var(--deep);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      background-image: linear-gradient(rgba(16, 14, 12, 0.35), rgba(16, 14, 12, 0.35)), url('https://images.unsplash.com/photo-1543357480-c6f2f4b8d6d6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1650&q=80');
+      background-size: cover;
+      background-position: center 30%;
+      padding: 32px;
+      box-sizing: border-box;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    /* container but not a card (no background) */
+    .container {
+      width: 100%;
+      max-width: 980px;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    h2 {
+      margin: 0 0 12px 0;
+      color: var(--beige);
+      font-family: 'Noto Serif TC', serif;
+      font-size: 22px;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.35);
+    }
+
+    .panel {
+      margin-bottom: 18px;
+      padding: 12px;
+      border-radius: 10px;
+    }
+
+    label, .panel h3 {
+      color: #fff9f6;
+      font-size: 15px;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    input[type=text], input[type=tel], input[type=number], select {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--input-border);
+      font-size: 15px;
+      background: rgba(255,255,255,0.95);
+      box-sizing: border-box;
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .small-input { width: 90px; }
+
+    .btn {
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      background: var(--wood);
+      color: white;
+      font-weight: 600;
+      box-shadow: 0 6px 12px rgba(142, 116, 74, 0.18);
+    }
+
+    /* table responsive */
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      background: rgba(255,255,255,0.92);
+      border-radius: 8px;
+      padding: 8px;
+      box-sizing: border-box;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 720px;
+      background: transparent;
+    }
+
+    th, td {
+      border: 1px solid rgba(0,0,0,0.06);
+      padding: 10px 12px;
+      text-align: left;
+      color: #2f2a26;
+      background: rgba(255,255,255,0.98);
+    }
+
+    th {
+      background: linear-gradient(90deg, rgba(255,255,255,0.98), rgba(250,245,240,0.98));
+      color: var(--wood);
+      font-weight: 700;
+    }
+
+    tr:nth-child(even) td { background: rgba(248,246,244,0.8); }
+
+    /* hint */
+    #adminStockHint { color: #fff3f6; font-weight: 600; margin-top: 6px; }
+
+    @media (max-width: 900px) {
+      body { padding: 20px; }
+      .container { padding: 12px; }
+      table { min-width: 640px; }
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 14px; }
+      table { min-width: 520px; }
+      .controls { flex-direction: column; align-items: stretch; }
+      .small-input { width: 100%; }
+    }
   </style>
 </head>
 
 <body>
 
-  <h2>📋 草莓大福後台管理</h2>
+  <main class="container" role="main">
+    <h2>📋 草莓大福後台管理</h2>
 
-  <div class="admin-panel">
-    <h3>⚙️ 每日總量設定</h3>
-    今日限定總數：
-    <input type="number" id="maxInput" style="width: 60px; padding: 5px;">
-    <button onclick="saveMax()" style="padding: 5px 10px; cursor: pointer;">儲存新總量</button>
-    <p id="adminStockHint" style="color: #d02090; font-weight: bold; margin-top: 10px;"></p>
-  </div>
+    <section class="panel">
+      <h3>⚙️ 每日總量設定</h3>
+      <div class="controls">
+        <label style="display:none;">今日限定總數</label>
+        <input type="number" id="maxInput" class="small-input" min="0" />
+        <button onclick="saveMax()" class="btn">儲存新總量</button>
+        <div id="adminStockHint"></div>
+      </div>
+    </section>
 
-  <div class="admin-panel">
-    <h3>🔎 篩選與排序</h3>
-    狀態：
-    <select id="filterStatus" onchange="load()">
-      <option value="全部">全部</option>
-      <option value="未取貨">未取貨</option>
-      <option value="已取貨">已取貨</option>
-      <option value="已取消">已取消</option>
-    </select>
-    &nbsp;&nbsp;
-    排序：
-    <select id="sortBy" onchange="load()">
-      <option value="number">號碼（新→舊）</option>
-      <option value="time">時間（新→舊）</option>
-    </select>
-    &nbsp;
-    <select id="sortDir" onchange="load()">
-      <option value="desc">降冪</option>
-      <option value="asc">升冪</option>
-    </select>
-  </div>
+    <section class="panel">
+      <h3>🔎 篩選與排序</h3>
+      <div class="controls">
+        <select id="filterStatus" onchange="load()">
+          <option value="全部">全部</option>
+          <option value="未取貨">未取貨</option>
+          <option value="已取貨">已取貨</option>
+          <option value="已取消">已取消</option>
+        </select>
 
-  <table>
-    <thead>
-      <tr>
-        <th>號碼</th>
-        <th>姓名</th>
-        <th>電話</th>
-        <th>數量</th>
-        <th>狀態</th>
-        <th>下單時間 (日期)</th>
-      </tr>
-    </thead>
-    <tbody id="list"></tbody>
-  </table>
+        <select id="sortBy" onchange="load()">
+          <option value="number">號碼（新→舊）</option>
+          <option value="time">時間（新→舊）</option>
+        </select>
 
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  
-  <script src="./main.js"></script>
+        <select id="sortDir" onchange="load()">
+          <option value="desc">降冪</option>
+          <option value="asc">升冪</option>
+        </select>
+      </div>
+    </section>
 
-  <script>
-    async function load() {
-      try {
-        // 1. 讀取設定
-        const config = await getStockConfig();
-        document.getElementById("maxInput").value = config.max;
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>號碼</th>
+            <th>姓名</th>
+            <th>電話</th>
+            <th>數量</th>
+            <th>狀態</th>
+            <th>下單時間 (日期)</th>
+          </tr>
+        </thead>
+        <tbody id="list"></tbody>
+      </table>
+    </div>
 
-        // 2. 讀取所有訂單
-        const statusFilter = document.getElementById('filterStatus')?.value || '全部';
-        const sortBy = document.getElementById('sortBy')?.value || 'number';
-        const sortDir = document.getElementById('sortDir')?.value || 'desc';
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="./main.js"></script>
 
-        const orders = await getOrders({ status: statusFilter, sortBy, sortDir });
-        const list = document.getElementById("list");
-        list.innerHTML = "";
+    <script>
+      async function load() {
+        try {
+          const config = await getStockConfig();
+          document.getElementById("maxInput").value = config.max;
 
-        const today = getTodayStr();
-        let todaySold = 0;
+          const statusFilter = document.getElementById('filterStatus')?.value || '全部';
+          const sortBy = document.getElementById('sortBy')?.value || 'number';
+          const sortDir = document.getElementById('sortDir')?.value || 'desc';
 
-        orders.forEach(o => {
-          // 計算今天的銷量（不計入已取消）
-          if (o.date === today && o.status !== '已取消') {
-            todaySold += Number(o.amount || 0);
+          const orders = await getOrders({ status: statusFilter, sortBy, sortDir });
+          const list = document.getElementById("list");
+          list.innerHTML = "";
+
+          const today = getTodayStr();
+          let todaySold = 0;
+
+          orders.forEach(o => {
+            if (o.date === today && o.status !== '已取消') {
+              todaySold += Number(o.amount || 0);
+            }
+
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${o.number}</td>
+              <td>${o.name}</td>
+              <td>${o.phone}</td>
+              <td>${o.amount}</td>
+              <td>
+                <select onchange="handleStatusChange('${o.id}', this.value)">
+                  <option value="未取貨" ${o.status=="未取貨"?"selected":""}>未取貨</option>
+                  <option value="已取貨" ${o.status=="已取貨"?"selected":""}>已取貨</option>
+                  <option value="已取消" ${o.status=="已取消"?"selected":""}>已取消</option>
+                </select>
+              </td>
+              <td>${o.time?.toDate().toLocaleString() || (o.date || "無日期")}</td>
+            `;
+            list.appendChild(tr);
+          });
+
+          window.handleStatusChange = async function(id, status) {
+            try {
+              await updateStatus(id, status);
+              await load();
+            } catch (err) {
+              alert('更新狀態失敗：' + err.message);
+            }
           }
 
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${o.number}</td>
-            <td>${o.name}</td>
-            <td>${o.phone}</td>
-            <td>${o.amount}</td>
-            <td>
-              <select onchange="handleStatusChange('${o.id}', this.value)">
-                <option value="未取貨" ${o.status=="未取貨"?"selected":""}>未取貨</option>
-                <option value="已取貨" ${o.status=="已取貨"?"selected":""}>已取貨</option>
-                <option value="已取消" ${o.status=="已取消"?"selected":""}>已取消</option>
-              </select>
-            </td>
-            <td>${o.time?.toDate().toLocaleString() || (o.date || "無日期")}</td>
-          `;
-          list.appendChild(tr);
-        });
+          document.getElementById("adminStockHint").innerText = `今日統計：已收單 ${todaySold} 份 / 總上限 ${config.max} 份`;
 
-        // 處理：狀態改變時呼叫後端並重新載入
-        window.handleStatusChange = async function(id, status) {
-          try {
-            await updateStatus(id, status);
-            await load();
-          } catch (err) {
-            alert('更新狀態失敗：' + err.message);
-          }
+        } catch (err) {
+          console.error("載入失敗:", err);
         }
-
-        document.getElementById("adminStockHint").innerText = 
-          `今日統計：已收單 ${todaySold} 份 / 總上限 ${config.max} 份`;
-
-      } catch (err) {
-        console.error("載入失敗:", err);
       }
-    }
 
-    async function saveMax() {
-      const newMax = document.getElementById("maxInput").value;
-      if (!newMax || newMax < 0) return alert("請輸入有效的數量");
-      
-      try {
-        await updateStockConfig(newMax);
-        alert("儲存成功！");
-        load(); 
-      } catch (err) {
-        alert("儲存失敗：" + err.message);
+      async function saveMax() {
+        const newMax = document.getElementById("maxInput").value;
+        if (!newMax || newMax < 0) return alert("請輸入有效的數量");
+
+        try {
+          await updateStockConfig(newMax);
+          alert("儲存成功！");
+          load();
+        } catch (err) {
+          alert("儲存失敗：" + err.message);
+        }
       }
-    }
 
-    // 頁面開啟時執行
-    load();
-  </script>
+      load();
+    </script>
+
+  </main>
 
 </body>
+
 </html>

@@ -2,67 +2,76 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>草莓大福預約</title>
 </head>
-
 <body style="font-family:sans-serif; max-width:500px; margin:auto; padding:20px;">
 
 <h2>🍓 草莓大福預約系統</h2>
+<p id="stockInfo">確認庫存中...</p>
 
 <form id="orderForm">
-
-  <p>
-    姓名：<br>
-    <input type="text" id="name" required>
-  </p>
-
-  <p>
-    電話：<br>
-    <input type="tel" id="phone" required>
-  </p>
-
-  <p>
-    數量：<br>
-    <input type="number" id="amount" min="1" required>
-  </p>
-
-  <button type="submit">送出預約</button>
-
+  <p>姓名：<br><input type="text" id="name" required></p>
+  <p>電話：<br><input type="tel" id="phone" required></p>
+  <p>數量：<br><input type="number" id="amount" min="1" required></p>
+  <button type="submit" id="submitBtn">送出預約</button>
 </form>
 
-<p id="msg"></p>
+<p id="msg" style="color: blue;"></p>
 
-<!-- Firebase CDN -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
 <script src="./main.js"></script>
 
 <script>
+const MAX_STOCK = 50; // 你可以在這裡修改限量總數
 const form = document.getElementById("orderForm");
+const msg = document.getElementById("msg");
+
+// 檢查庫存
+async function checkStock() {
+  const orders = await getOrders();
+  const totalSold = orders.reduce((sum, o) => sum + Number(o.amount), 0);
+  const remain = MAX_STOCK - totalSold;
+  
+  document.getElementById("stockInfo").innerText = `剩餘數量：${remain > 0 ? remain : 0} (限量 ${MAX_STOCK} 份)`;
+  
+  if (remain <= 0) {
+    document.getElementById("submitBtn").disabled = true;
+    document.getElementById("submitBtn").innerText = "已售罄";
+  }
+  return remain;
+}
+
+checkStock();
 
 form.addEventListener("submit", async (e)=>{
-
   e.preventDefault();
+  
+  const remain = await checkStock();
+  const inputAmount = Number(document.getElementById("amount").value);
+
+  if (inputAmount > remain) {
+    alert("數量不足！目前只剩 " + remain + " 份");
+    return;
+  }
 
   const data = {
-    name: name.value,
-    phone: phone.value,
-    amount: Number(amount.value)
+    name: document.getElementById("name").value,
+    phone: document.getElementById("phone").value,
+    amount: inputAmount
   };
 
   msg.innerText = "送出中...";
 
-  try{
+  try {
     const no = await createOrder(data);
-
     location.href=`/success.html?no=${no}`;
-
-  }catch(err){
-    alert("送出失敗："+err.message);
-    console.error(err);
+  } catch(err) {
+    alert("送出失敗：" + err.message);
+    msg.innerText = "";
   }
-
 });
 </script>
-
+</body>
+</html>

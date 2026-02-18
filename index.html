@@ -9,51 +9,46 @@
 
 <h2>🍓 草莓大福預約系統</h2>
 
-<!-- Netlify 表單 -->
-<form
-  name="order"
-  method="POST"
-  data-netlify="true"
-  data-netlify-honeypot="bot-field"
-  action="/success.html"
->
-
-  <!-- 必須存在：表單識別 -->
-  <input type="hidden" name="form-name" value="order">
-
-  <!-- 防垃圾 -->
-  <p hidden>
-    <input name="bot-field">
-  </p>
+<form id="orderForm">
 
   <p>
     姓名：<br>
-    <input type="text" name="name" required>
+    <input type="text" id="name" required>
   </p>
 
   <p>
     電話：<br>
-    <input type="tel" name="phone" required>
+    <input type="tel" id="phone" required>
   </p>
 
   <p>
     數量：<br>
-    <input type="number" name="amount" min="1" required>
-  </p>
-
-  <p>
-    取貨日期：<br>
-    <input type="date" name="date" required>
-  </p>
-
-  <p>
-    備註：<br>
-    <textarea name="note"></textarea>
+    <input type="number" id="amount" min="1" required>
   </p>
 
   <button type="submit">送出預約</button>
 
 </form>
 
-</body>
-</html>
+<p id="msg"></p>
+
+<script type="module">
+import { createOrder } from "./main.js";
+
+const form = document.getElementById("orderForm");
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const data = {
+    name: document.getElementById("name").value,
+    phone: document.getElementById("phone").value,
+    amount: Number(document.getElementById("amount").value)
+  };
+
+  document.getElementById("msg").innerText = "送出中...";
+
+  const number = await createOrder(data);
+
+  location.href = `/success.html?no=${number}`;
+}

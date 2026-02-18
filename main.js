@@ -16,9 +16,12 @@ import {
 
 // 🔴 請換成你的 Firebase 設定
 const firebaseConfig = {
-  apiKey: "貼你的",
-  authDomain: "貼你的",
-  projectId: "貼你的",
+  apiKey: "AIzaSyChgtljdiiYO69_wgSOORbxCd3KPB2u2os",
+  authDomain: "daifuku-order.firebaseapp.com",
+  projectId: "daifuku-order",
+  storageBucket: "daifuku-order.firebasestorage.app",
+  messagingSenderId: "430618395622",
+  appId: "1:430618395622:web:e59a8bec2c0fd354368c27"
 };
 
 const app = initializeApp(firebaseConfig);

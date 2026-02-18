@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>後台管理</title>
+</head>
+
+<body style="font-family:sans-serif; padding:20px;">
+
+<h2>📋 草莓大福後台</h2>
+
+<table border="1" cellpadding="5">
+<thead>
+<tr>
+  <th>號碼</th>
+  <th>姓名</th>
+  <th>電話</th>
+  <th>數量</th>
+  <th>狀態</th>
+  <th>時間</th>
+</tr>
+</thead>
+
+<tbody id="list"></tbody>
+</table>
+
+<script type="module">
+import { getOrders, updateStatus } from "./main.js";
+
+async function load() {
+  const orders = await getOrders();
+  const list = document.getElementById("list");
+
+  list.innerHTML = "";
+
+  orders.forEach(o => {
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>${o.number}</td>
+      <td>${o.name}</td>
+      <td>${o.phone}</td>
+      <td>${o.amount}</td>
+      <td>
+        <select data-id="${o.id}">
+          <option ${o.status=="未取貨"?"selected":""}>未取貨</option>
+          <option ${o.status=="已取貨"?"selected":""}>已取貨</option>
+        </select>
+      </td>
+      <td>${o.time?.toDate().toLocaleString()||""}</td>
+    `;
+
+    list.appendChild(tr);
+  });
+
+  document.querySelectorAll("select").forEach(s=>{
+    s.onchange=()=>{
+      updateStatus(s.dataset.id,s.value);
+    };
+  });
+}
+
+load();
+</script>
+
+</body>
+</html>

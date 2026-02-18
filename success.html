@@ -1,17 +1,26 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <title>成功</title>
+<meta charset="UTF-8">
+<title>預約成功</title>
 </head>
 
 <body style="text-align:center; padding:50px;">
 
-<h2>✅ 預約完成</h2>
+<h2>✅ 預約成功</h2>
 
-<p>我們已收到你的資料，謝謝支持 🍓</p>
+<p id="no"></p>
+<p>狀態：未取貨</p>
 
 <a href="/">回首頁</a>
+
+<script>
+const url = new URL(location.href);
+const no = url.searchParams.get("no");
+
+document.getElementById("no").innerText =
+  "你的號碼牌是：" + no;
+</script>
 
 </body>
 </html>

@@ -34,7 +34,7 @@
       h1.title{font-family:'Noto Serif TC', serif;margin:6px 0 18px;font-size:20px;color:var(--deep);}
       p.subtitle{margin:0 0 18px;color:#6b6156;font-size:13px}
 
-      label{display:block;font-size:13px;color:#4e463f;margin-bottom:6px}
+      label{display:block;font-size:16px;color:#4e463f;margin-bottom:6px}
       .field{margin-bottom:12px}
       input[type=text], input[type=tel], input[type=number], select{
         width:100%;padding:12px 14px;border-radius:8px;border:1px solid var(--input-border);font-size:15px;background:transparent;outline:none;box-sizing:border-box;
@@ -68,6 +68,8 @@
         </div>
       </div>
 
+      <div id="stockInfo" class="stock">今日剩餘：<strong id="stockCount">--</strong> 份（每日限定 <span id="stockMax">--</span> 份）</div>
+
       <form id="orderForm" action="success.html" method="get">
         <div class="field">
           <label for="name">姓名</label>
@@ -82,18 +84,8 @@
           <input id="qty" name="qty" type="number" min="1" value="1" required>
         </div>
 
-        <div class="field">
-          <label>取貨時段</label>
-          <div class="toggle-group" role="tablist" aria-label="取貨時段">
-            <div class="toggle active" data-value="morning">早上</div>
-            <div class="toggle" data-value="afternoon">下午</div>
-            <div class="toggle" data-value="evening">傍晚</div>
-          </div>
-          <input type="hidden" name="period" id="period" value="morning">
-        </div>
-
         <button type="submit" class="submit">立即預約</button>
-        <p class="note">付款與取貨細節將在下一步確認。</p>
+
       </form>
     </main>
 

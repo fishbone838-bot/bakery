@@ -34,7 +34,7 @@
       h1.title{font-family:'Noto Serif TC', serif;margin:6px 0 18px;font-size:20px;color:var(--deep);}
       p.subtitle{margin:0 0 18px;color:#6b6156;font-size:13px}
 
-      label{display:block;font-size:16px;color:#4e463f;margin-bottom:6px}
+      label{display:block;font-size:13px;color:#4e463f;margin-bottom:6px}
       .field{margin-bottom:12px}
       input[type=text], input[type=tel], input[type=number], select{
         width:100%;padding:12px 14px;border-radius:8px;border:1px solid var(--input-border);font-size:15px;background:transparent;outline:none;box-sizing:border-box;
@@ -68,8 +68,6 @@
         </div>
       </div>
 
-      <div id="stockInfo" class="stock">今日剩餘：<strong id="stockCount">--</strong> 份（每日限定 <span id="stockMax">--</span> 份）</div>
-
       <form id="orderForm" action="success.html" method="get">
         <div class="field">
           <label for="name">姓名</label>
@@ -84,72 +82,29 @@
           <input id="qty" name="qty" type="number" min="1" value="1" required>
         </div>
 
-        <button type="submit" class="submit">立即預約</button>
+        <div class="field">
+          <label>取貨時段</label>
+          <div class="toggle-group" role="tablist" aria-label="取貨時段">
+            <div class="toggle active" data-value="morning">早上</div>
+            <div class="toggle" data-value="afternoon">下午</div>
+            <div class="toggle" data-value="evening">傍晚</div>
+          </div>
+          <input type="hidden" name="period" id="period" value="morning">
+        </div>
 
+        <button type="submit" class="submit">立即預約</button>
+        <p class="note">付款與取貨細節將在下一步確認。</p>
       </form>
     </main>
 
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script src="./main.js"></script>
-
     <script>
-      // 讀取後台設定並更新今日庫存顯示
-      async function loadStockInfo(){
-        try{
-          const cfg = await getStockConfig();
-          const max = Number(cfg.max || 50);
-          document.getElementById('stockMax').innerText = max;
-
-          // 取得所有訂單並計算今天已售（不計已取消）
-          const orders = await getOrders();
-          const today = getTodayStr();
-          let sold = 0;
-          orders.forEach(o=>{
-            if(o.date === today && o.status !== '已取消') sold += Number(o.amount || 0);
-          });
-
-          const remain = Math.max(0, max - sold);
-          document.getElementById('stockCount').innerText = remain;
-
-          // 若已售罄，調整按鈕狀態
-          const submit = document.querySelector('.submit');
-          if (remain <= 0) {
-            submit.disabled = true;
-            submit.innerText = '今日已售罄';
-            submit.style.opacity = '0.7';
-            submit.style.cursor = 'not-allowed';
-          }
-        }catch(err){
-          console.error('無法載入庫存設定', err);
-          document.getElementById('stockCount').innerText = '--';
-          document.getElementById('stockMax').innerText = '--';
-          const hint = document.getElementById('stockInfo');
-          if(hint) hint.title = '無法連線至後台設定，請檢查網路或後台服務。';
-        }
-      }
-
-      // 若 main.js 的函式還沒準備好，採用重試機制避免 race condition
-      function waitForAPI(maxMs = 5000){
-        return new Promise((resolve, reject)=>{
-          const start = Date.now();
-          (function check(){
-            if (typeof getStockConfig === 'function' && typeof getOrders === 'function' && typeof getTodayStr === 'function') return resolve(true);
-            if (Date.now() - start > maxMs) return reject(new Error('API load timeout'));
-            setTimeout(check, 200);
-          })();
-        });
-      }
-
-      document.addEventListener('DOMContentLoaded', ()=>{
-        waitForAPI(5000).then(()=>{
-          loadStockInfo();
-        }).catch(err=>{
-          console.error('API 尚未就緒或載入失敗', err);
-          document.getElementById('stockCount').innerText = '--';
-          document.getElementById('stockMax').innerText = '--';
-          const hint = document.getElementById('stockInfo');
-          if(hint) hint.innerText = '無法連線至後台設定（請稍後重試）';
+      // Toggle behavior for period selection
+      document.querySelectorAll('.toggle-group .toggle').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          document.querySelectorAll('.toggle-group .toggle').forEach(b=>b.classList.remove('active'));
+          btn.classList.add('active');
+          const val = btn.getAttribute('data-value') || '';
+          document.getElementById('period').value = val;
         });
       });
     </script>

@@ -24,9 +24,7 @@
     }
 
     body {
-      background-image: linear-gradient(rgba(16, 14, 12, 0.35), rgba(16, 14, 12, 0.35)), url('https://images.unsplash.com/photo-1543357480-c6f2f4b8d6d6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1650&q=80');
-      background-size: cover;
-      background-position: center 30%;
+      background-color: #ffffff;
       padding: 32px;
       box-sizing: border-box;
       min-height: 100vh;
@@ -46,10 +44,9 @@
 
     h2 {
       margin: 0 0 12px 0;
-      color: var(--beige);
+      color: var(--deep);
       font-family: 'Noto Serif TC', serif;
       font-size: 22px;
-      text-shadow: 0 2px 6px rgba(0,0,0,0.35);
     }
 
     .panel {
@@ -129,7 +126,19 @@
     tr:nth-child(even) td { background: rgba(248,246,244,0.8); }
 
     /* hint */
-    #adminStockHint { color: #fff3f6; font-weight: 600; margin-top: 6px; }
+    #adminStockHint { color: var(--wood); font-weight: 600; margin-top: 6px; }
+
+    /* status styles */
+    .status-select {
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(0,0,0,0.06);
+      font-weight: 600;
+    }
+
+    .status-pending { background: #fff8e6; color: #7a5b00; }
+    .status-done { background: #e8fbf0; color: #0b6b3a; }
+    .status-cancel { background: #fff0f2; color: #9b1b2a; }
 
     @media (max-width: 900px) {
       body { padding: 20px; }
@@ -204,6 +213,34 @@
     <script src="./main.js"></script>
 
     <script>
+      function statusToClass(status) {
+        if (status === '已取貨') return 'status-done';
+        if (status === '已取消') return 'status-cancel';
+        return 'status-pending';
+      }
+
+      function pad(n) { return String(n).padStart(2, '0'); }
+
+      function formatOrderTime(o) {
+        try {
+          if (o.time && typeof o.time.toDate === 'function') {
+            const d = o.time.toDate();
+            return `${d.getMonth()+1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+          }
+          // fallback: try parse o.date if it's a string
+          if (o.date) {
+            const parsed = new Date(o.date);
+            if (!isNaN(parsed)) {
+              return `${parsed.getMonth()+1}/${parsed.getDate()} ${pad(parsed.getHours())}:${pad(parsed.getMinutes())}`;
+            }
+            return o.date;
+          }
+        } catch (e) {
+          // ignore and fallthrough
+        }
+        return '無日期';
+      }
+
       async function load() {
         try {
           const config = await getStockConfig();
@@ -238,9 +275,22 @@
                   <option value="已取消" ${o.status=="已取消"?"selected":""}>已取消</option>
                 </select>
               </td>
-              <td>${o.time?.toDate().toLocaleString() || (o.date || "無日期")}</td>
+              <td>${formatOrderTime(o)}</td>
             `;
             list.appendChild(tr);
+
+            // apply status class to select for colored appearance
+            const sel = tr.querySelector('select');
+            if (sel) {
+              sel.classList.add('status-select');
+              sel.classList.add(statusToClass(o.status));
+              // when user changes selection, update class immediately
+              sel.addEventListener('change', function() {
+                // remove previous status-* classes
+                sel.classList.remove('status-pending', 'status-done', 'status-cancel');
+                sel.classList.add(statusToClass(sel.value));
+              });
+            }
           });
 
           window.handleStatusChange = async function(id, status) {

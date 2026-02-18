@@ -69,7 +69,9 @@
         
         let totalSoldToday = 0;
         snap.forEach(doc => {
-          totalSoldToday += Number(doc.data().amount || 0);
+          const d = doc.data();
+          if (d.status === '已取消') return; // 已取消的訂單不計入庫存
+          totalSoldToday += Number(d.amount || 0);
         });
 
         const remain = MAX_STOCK - totalSoldToday;

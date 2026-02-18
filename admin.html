@@ -25,6 +25,28 @@
     <p id="adminStockHint" style="color: #d02090; font-weight: bold; margin-top: 10px;"></p>
   </div>
 
+  <div class="admin-panel">
+    <h3>🔎 篩選與排序</h3>
+    狀態：
+    <select id="filterStatus" onchange="load()">
+      <option value="全部">全部</option>
+      <option value="未取貨">未取貨</option>
+      <option value="已取貨">已取貨</option>
+      <option value="已取消">已取消</option>
+    </select>
+    &nbsp;&nbsp;
+    排序：
+    <select id="sortBy" onchange="load()">
+      <option value="number">號碼（新→舊）</option>
+      <option value="time">時間（新→舊）</option>
+    </select>
+    &nbsp;
+    <select id="sortDir" onchange="load()">
+      <option value="desc">降冪</option>
+      <option value="asc">升冪</option>
+    </select>
+  </div>
+
   <table>
     <thead>
       <tr>
@@ -52,7 +74,11 @@
         document.getElementById("maxInput").value = config.max;
 
         // 2. 讀取所有訂單
-        const orders = await getOrders();
+        const statusFilter = document.getElementById('filterStatus')?.value || '全部';
+        const sortBy = document.getElementById('sortBy')?.value || 'number';
+        const sortDir = document.getElementById('sortDir')?.value || 'desc';
+
+        const orders = await getOrders({ status: statusFilter, sortBy, sortDir });
         const list = document.getElementById("list");
         list.innerHTML = "";
 
@@ -60,8 +86,8 @@
         let todaySold = 0;
 
         orders.forEach(o => {
-          // 計算今天的銷量 (o.date 來自 createOrder 存入的值)
-          if (o.date === today) {
+          // 計算今天的銷量（不計入已取消）
+          if (o.date === today && o.status !== '已取消') {
             todaySold += Number(o.amount || 0);
           }
 
@@ -72,15 +98,26 @@
             <td>${o.phone}</td>
             <td>${o.amount}</td>
             <td>
-              <select onchange="updateStatus('${o.id}', this.value)">
+              <select onchange="handleStatusChange('${o.id}', this.value)">
                 <option value="未取貨" ${o.status=="未取貨"?"selected":""}>未取貨</option>
                 <option value="已取貨" ${o.status=="已取貨"?"selected":""}>已取貨</option>
+                <option value="已取消" ${o.status=="已取消"?"selected":""}>已取消</option>
               </select>
             </td>
             <td>${o.time?.toDate().toLocaleString() || (o.date || "無日期")}</td>
           `;
           list.appendChild(tr);
         });
+
+        // 處理：狀態改變時呼叫後端並重新載入
+        window.handleStatusChange = async function(id, status) {
+          try {
+            await updateStatus(id, status);
+            await load();
+          } catch (err) {
+            alert('更新狀態失敗：' + err.message);
+          }
+        }
 
         document.getElementById("adminStockHint").innerText = 
           `今日統計：已收單 ${todaySold} 份 / 總上限 ${config.max} 份`;

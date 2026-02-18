@@ -44,15 +44,43 @@ async function createOrder(data){
   return num;
 }
 
-// 4. 讀取所有訂單 (後台用)
-async function getOrders(){
-  const snap = await db.collection("orders").orderBy("number", "desc").get();
+// 4. 讀取訂單 (後台用) — 支援篩選與排序
+//    options: { status: '全部'|'未取貨'|'已取貨'|'已取消', sortBy: 'number'|'time', sortDir: 'asc'|'desc' }
+async function getOrders(options = {}){
+  let q = db.collection("orders");
+
+  // 篩選狀態（預設為全部）
+  if (options.status && options.status !== '全部') {
+    q = q.where('status', '==', options.status);
+  }
+
+  // 排序
+  const sortBy = options.sortBy || 'number';
+  const sortDir = options.sortDir === 'asc' ? 'asc' : 'desc';
+  if (sortBy === 'time') {
+    q = q.orderBy('time', sortDir);
+  } else {
+    q = q.orderBy('number', sortDir);
+  }
+
+  const snap = await q.get();
   return snap.docs.map(d=>({ id:d.id, ...d.data() }));
 }
 
-// 5. 更新訂單狀態
+// 5. 更新訂單狀態（若改為已取消，紀錄取消時間；若從已取消改回，移除取消時間）
 async function updateStatus(id, status){
-  await db.collection("orders").doc(id).update({status});
+  const ref = db.collection("orders").doc(id);
+  const doc = await ref.get();
+  const prev = doc.exists ? doc.data().status : null;
+
+  const updates = { status };
+  if (status === '已取消') {
+    updates.cancelledAt = firebase.firestore.FieldValue.serverTimestamp();
+  } else if (prev === '已取消') {
+    updates.cancelledAt = firebase.firestore.FieldValue.delete();
+  }
+
+  await ref.update(updates);
 }
 
 // 6. 取得限量設定 (若資料庫沒設定過，預設 50)

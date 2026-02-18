@@ -1,44 +1,54 @@
-<div style="background: #fff0f5; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-  <h3>⚙️ 每日總量設定</h3>
-  今日限定總數：
-  <input type="number" id="maxInput" style="width: 60px;">
-  <button onclick="saveMax()">儲存新總量</button>
-  <p id="adminStockHint" style="color: #d02090; font-weight: bold;"></p>
-</div>
+async function load() {
+  try {
+    // 讀取設定
+    const config = await getStockConfig();
+    document.getElementById("maxInput").value = config.max;
 
-<script>
-// 儲存新的總量
+    // 讀取所有訂單
+    const orders = await getOrders();
+    const list = document.getElementById("list");
+    list.innerHTML = "";
+
+    const today = getTodayStr();
+    let todaySold = 0;
+
+    orders.forEach(o => {
+      // 1. 計算今天的銷量
+      if (o.date === today) {
+        todaySold += Number(o.amount);
+      }
+
+      // 2. 顯示所有訂單 (舊訂單也會顯示在這裡)
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${o.number}</td>
+        <td>${o.name}</td>
+        <td>${o.phone}</td>
+        <td>${o.amount}</td>
+        <td>
+          <select onchange="updateStatus('${o.id}', this.value)">
+            <option value="未取貨" ${o.status=="未取貨"?"selected":""}>未取貨</option>
+            <option value="已取貨" ${o.status=="已取貨"?"selected":""}>已取貨</option>
+          </select>
+        </td>
+        <td>${o.time?.toDate().toLocaleString() || (o.date || "")}</td>
+      `;
+      list.appendChild(tr);
+    });
+
+    document.getElementById("adminStockHint").innerText = 
+      `今日統計：已收單 ${todaySold} 份 / 總上限 ${config.max} 份`;
+
+  } catch (err) {
+    console.error("載入失敗:", err);
+  }
+}
+
 async function saveMax() {
   const newMax = document.getElementById("maxInput").value;
-  if(!newMax || newMax < 1) return alert("請輸入正確數量");
-  await updateStockConfig(newMax);
-  alert("設定成功！前台已同步更新。");
-  load(); // 重新整理頁面資訊
+  await updateStockConfig(newMax); // 這次 main.js 有定義了，不會再報錯
+  alert("儲存成功！");
+  load(); 
 }
 
-// 在原本的 load() 函數中加入顯示邏輯
-async function load() {
-  const config = await getStockConfig();
-  document.getElementById("maxInput").value = config.max;
-
-  const orders = await getOrders(); // 這裡可以拿到所有訂單（包含舊的）
-  const list = document.getElementById("list");
-  list.innerHTML = "";
-
-  const today = getTodayStr();
-  let todaySold = 0;
-
-  orders.forEach(o => {
-    // 渲染表格 (保留原本邏輯)
-    renderOrderRow(o); 
-    
-    // 額外計算今天的量
-    if(o.date === today) {
-      todaySold += Number(o.amount);
-    }
-  });
-
-  document.getElementById("adminStockHint").innerText = 
-    `今日統計：已收單 ${todaySold} 份 / 總上限 ${config.max} 份`;
-}
-</script>
+load();

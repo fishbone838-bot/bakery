@@ -7,11 +7,24 @@
 
 <body style="font-family:sans-serif; max-width:500px; margin:auto; padding:20px;">
 
-<h2>🍓 草莓大福預約系統 v1</h2>
+<h2>🍓 草莓大福預約系統</h2>
 
-<form name="order" method="POST" data-netlify="true">
+<!-- Netlify 表單 -->
+<form
+  name="order"
+  method="POST"
+  data-netlify="true"
+  data-netlify-honeypot="bot-field"
+  action="/success.html"
+>
 
+  <!-- 必須存在：表單識別 -->
   <input type="hidden" name="form-name" value="order">
+
+  <!-- 防垃圾 -->
+  <p hidden>
+    <input name="bot-field">
+  </p>
 
   <p>
     姓名：<br>

@@ -1,40 +1,44 @@
-<div class="admin-form" style="margin-bottom: 20px; border: 2px solid #ff69b4;">
-  <h3>⚙️ 每日限量設定</h3>
-  今日總量：<input type="number" id="maxInput" style="width:60px">
-  <button onclick="saveStock()">儲存設定</button>
-  <p id="currentStockHint" style="font-size: 0.8em; color: gray;"></p>
+<div style="background: #fff0f5; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+  <h3>⚙️ 每日總量設定</h3>
+  今日限定總數：
+  <input type="number" id="maxInput" style="width: 60px;">
+  <button onclick="saveMax()">儲存新總量</button>
+  <p id="adminStockHint" style="color: #d02090; font-weight: bold;"></p>
 </div>
 
 <script>
-// 在 load() 函數中加入讀取庫存設定的邏輯
+// 儲存新的總量
+async function saveMax() {
+  const newMax = document.getElementById("maxInput").value;
+  if(!newMax || newMax < 1) return alert("請輸入正確數量");
+  await updateStockConfig(newMax);
+  alert("設定成功！前台已同步更新。");
+  load(); // 重新整理頁面資訊
+}
+
+// 在原本的 load() 函數中加入顯示邏輯
 async function load() {
-  // 1. 讀取庫存設定
   const config = await getStockConfig();
   document.getElementById("maxInput").value = config.max;
 
-  // 2. 讀取訂單 (原本的邏輯)
-  const orders = await getOrders();
+  const orders = await getOrders(); // 這裡可以拿到所有訂單（包含舊的）
   const list = document.getElementById("list");
   list.innerHTML = "";
-  
-  // 計算已售出數量
-  let soldCount = 0;
-  orders.forEach(o => {
-    soldCount += Number(o.amount);
-    // ... 這裡保留你原本表格渲染的 code ...
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${o.number}</td><td>${o.name}</td><td>${o.phone}</td><td>${o.amount}</td><td><select onchange="updateStatus('${o.id}', this.value)"><option value="未取貨" ${o.status=="未取貨"?"selected":""}>未取貨</option><option value="已取貨" ${o.status=="已取貨"?"selected":""}>已取貨</option></select></td><td>${o.time?.toDate().toLocaleString() || "無時間"}</td>`;
-    list.appendChild(tr);
-  });
-  
-  document.getElementById("currentStockHint").innerText = `目前已預約：${soldCount} 份 / 剩餘：${config.max - soldCount} 份`;
-}
 
-// 儲存設定的按鈕功能
-async function saveStock() {
-  const val = document.getElementById("maxInput").value;
-  await updateStockConfig(val);
-  alert("設定已更新！");
-  location.reload();
+  const today = getTodayStr();
+  let todaySold = 0;
+
+  orders.forEach(o => {
+    // 渲染表格 (保留原本邏輯)
+    renderOrderRow(o); 
+    
+    // 額外計算今天的量
+    if(o.date === today) {
+      todaySold += Number(o.amount);
+    }
+  });
+
+  document.getElementById("adminStockHint").innerText = 
+    `今日統計：已收單 ${todaySold} 份 / 總上限 ${config.max} 份`;
 }
 </script>

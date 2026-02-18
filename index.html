@@ -30,22 +30,26 @@ const msg = document.getElementById("msg");
 
 // 檢查庫存
 async function checkStock() {
-  // 1. 從資料庫抓取管理員設定的限量
+  // 1. 抓取限量設定
   const config = await getStockConfig();
   const MAX_STOCK = config.max;
 
-  // 2. 抓取目前所有訂單計算總額
-  const orders = await getOrders();
-  const totalSold = orders.reduce((sum, o) => sum + Number(o.amount), 0);
+  // 2. 只抓取「今天」的訂單
+  const today = getTodayStr(); // 呼叫剛寫好的函數
+  const snap = await db.collection("orders").where("date", "==", today).get();
   
-  const remain = MAX_STOCK - totalSold;
+  let totalSoldToday = 0;
+  snap.forEach(doc => {
+    totalSoldToday += Number(doc.data().amount);
+  });
   
-  document.getElementById("stockInfo").innerText = `剩餘數量：${remain > 0 ? remain : 0} (今日限量 ${MAX_STOCK} 份)`;
+  const remain = MAX_STOCK - totalSoldToday;
+  document.getElementById("stockInfo").innerText = `今日剩餘：${remain > 0 ? remain : 0} (今日總限量 ${MAX_STOCK} 份)`;
   
   if (remain <= 0) {
-    document.getElementById("submitBtn").disabled = true;
-    document.getElementById("submitBtn").innerText = "今日已售罄";
-    document.getElementById("orderForm").style.opacity = "0.5";
+    const btn = document.getElementById("submitBtn");
+    btn.disabled = true;
+    btn.innerText = "今日已售罄";
   }
   return remain;
 }

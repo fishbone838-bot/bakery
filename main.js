@@ -82,3 +82,36 @@ async function updateStockConfig(newMax) {
     max: Number(newMax)
   });
 }
+// 取得今天的日期字串 (格式：YYYY-MM-DD)
+function getTodayStr() {
+  const now = new Date();
+  return now.toISOString().split('T')[0];
+}
+
+// 修改後的建立訂單：加入 date 欄位
+async function createOrder(data){
+  const num = await getNextNumber();
+  await db.collection("orders").add({
+    number: num,
+    name: data.name,
+    phone: data.phone,
+    amount: data.amount,
+    status: "未取貨",
+    date: getTodayStr(), // ✨ 新增：記錄這是哪一天的訂單
+    time: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  return num;
+}
+
+// 取得目前的每日限量設定
+async function getStockConfig() {
+  const doc = await db.collection("settings").doc("stock").get();
+  return doc.exists ? doc.data() : { max: 50 };
+}
+
+// 更新每日限量設定
+async function updateStockConfig(newMax) {
+  await db.collection("settings").doc("stock").set({
+    max: Number(newMax)
+  });
+}

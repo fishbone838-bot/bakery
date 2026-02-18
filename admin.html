@@ -1,54 +1,111 @@
-async function load() {
-  try {
-    // 讀取設定
-    const config = await getStockConfig();
-    document.getElementById("maxInput").value = config.max;
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>草莓大福後台管理</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; background-color: #f9f9f9; }
+    .admin-panel { background: #fff0f5; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #ffb6c1; }
+    table { width: 100%; border-collapse: collapse; background: white; }
+    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+    th { background-color: #ff69b4; color: white; }
+    tr:nth-child(even) { background-color: #f2f2f2; }
+  </style>
+</head>
 
-    // 讀取所有訂單
-    const orders = await getOrders();
-    const list = document.getElementById("list");
-    list.innerHTML = "";
+<body>
 
-    const today = getTodayStr();
-    let todaySold = 0;
+  <h2>📋 草莓大福後台管理</h2>
 
-    orders.forEach(o => {
-      // 1. 計算今天的銷量
-      if (o.date === today) {
-        todaySold += Number(o.amount);
+  <div class="admin-panel">
+    <h3>⚙️ 每日總量設定</h3>
+    今日限定總數：
+    <input type="number" id="maxInput" style="width: 60px; padding: 5px;">
+    <button onclick="saveMax()" style="padding: 5px 10px; cursor: pointer;">儲存新總量</button>
+    <p id="adminStockHint" style="color: #d02090; font-weight: bold; margin-top: 10px;"></p>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>號碼</th>
+        <th>姓名</th>
+        <th>電話</th>
+        <th>數量</th>
+        <th>狀態</th>
+        <th>下單時間 (日期)</th>
+      </tr>
+    </thead>
+    <tbody id="list"></tbody>
+  </table>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  
+  <script src="./main.js"></script>
+
+  <script>
+    async function load() {
+      try {
+        // 1. 讀取設定
+        const config = await getStockConfig();
+        document.getElementById("maxInput").value = config.max;
+
+        // 2. 讀取所有訂單
+        const orders = await getOrders();
+        const list = document.getElementById("list");
+        list.innerHTML = "";
+
+        const today = getTodayStr();
+        let todaySold = 0;
+
+        orders.forEach(o => {
+          // 計算今天的銷量 (o.date 來自 createOrder 存入的值)
+          if (o.date === today) {
+            todaySold += Number(o.amount || 0);
+          }
+
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${o.number}</td>
+            <td>${o.name}</td>
+            <td>${o.phone}</td>
+            <td>${o.amount}</td>
+            <td>
+              <select onchange="updateStatus('${o.id}', this.value)">
+                <option value="未取貨" ${o.status=="未取貨"?"selected":""}>未取貨</option>
+                <option value="已取貨" ${o.status=="已取貨"?"selected":""}>已取貨</option>
+              </select>
+            </td>
+            <td>${o.time?.toDate().toLocaleString() || (o.date || "無日期")}</td>
+          `;
+          list.appendChild(tr);
+        });
+
+        document.getElementById("adminStockHint").innerText = 
+          `今日統計：已收單 ${todaySold} 份 / 總上限 ${config.max} 份`;
+
+      } catch (err) {
+        console.error("載入失敗:", err);
       }
+    }
 
-      // 2. 顯示所有訂單 (舊訂單也會顯示在這裡)
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${o.number}</td>
-        <td>${o.name}</td>
-        <td>${o.phone}</td>
-        <td>${o.amount}</td>
-        <td>
-          <select onchange="updateStatus('${o.id}', this.value)">
-            <option value="未取貨" ${o.status=="未取貨"?"selected":""}>未取貨</option>
-            <option value="已取貨" ${o.status=="已取貨"?"selected":""}>已取貨</option>
-          </select>
-        </td>
-        <td>${o.time?.toDate().toLocaleString() || (o.date || "")}</td>
-      `;
-      list.appendChild(tr);
-    });
+    async function saveMax() {
+      const newMax = document.getElementById("maxInput").value;
+      if (!newMax || newMax < 0) return alert("請輸入有效的數量");
+      
+      try {
+        await updateStockConfig(newMax);
+        alert("儲存成功！");
+        load(); 
+      } catch (err) {
+        alert("儲存失敗：" + err.message);
+      }
+    }
 
-    document.getElementById("adminStockHint").innerText = 
-      `今日統計：已收單 ${todaySold} 份 / 總上限 ${config.max} 份`;
+    // 頁面開啟時執行
+    load();
+  </script>
 
-  } catch (err) {
-    console.error("載入失敗:", err);
-  }
-}
-
-async function saveMax() {
-  const newMax = document.getElementById("maxInput").value;
-  await updateStockConfig(newMax); // 這次 main.js 有定義了，不會再報錯
-  alert("儲存成功！");
-  load(); 
-}
-
-load();
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>草莓大福預約</title>
+</head>
+
+<body style="font-family:sans-serif; max-width:500px; margin:auto; padding:20px;">
+
+<h2>🍓 草莓大福預約系統</h2>
+
+<form name="order" method="POST" data-netlify="true">
+
+  <input type="hidden" name="form-name" value="order">
+
+  <p>
+    姓名：<br>
+    <input type="text" name="name" required>
+  </p>
+
+  <p>
+    電話：<br>
+    <input type="tel" name="phone" required>
+  </p>
+
+  <p>
+    數量：<br>
+    <input type="number" name="amount" min="1" required>
+  </p>
+
+  <p>
+    取貨日期：<br>
+    <input type="date" name="date" required>
+  </p>
+
+  <p>
+    備註：<br>
+    <textarea name="note"></textarea>
+  </p>
+
+  <button type="submit">送出預約</button>
+
+</form>
+
+</body>
+</html>

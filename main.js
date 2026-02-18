@@ -66,3 +66,19 @@ async function updateStatus(id,status){
     .doc(id)
     .update({status});
 }
+// 取得目前庫存設定
+async function getStockConfig() {
+  const doc = await db.collection("settings").doc("stock").get();
+  if (!doc.exists) {
+    // 如果資料庫還沒設定過，預設給 50 份
+    return { max: 50 };
+  }
+  return doc.data();
+}
+
+// 更新庫存設定 (由後台呼叫)
+async function updateStockConfig(newMax) {
+  await db.collection("settings").doc("stock").set({
+    max: Number(newMax)
+  });
+}

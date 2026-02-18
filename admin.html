@@ -1,78 +1,40 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-  <meta charset="UTF-8">
-  <title>後台管理</title>
-  <style>
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
-    .admin-form { background: #f0f0f0; padding: 15px; border-radius: 8px; }
-  </style>
-</head>
-<body style="font-family:sans-serif; padding:20px;">
-
-<h2>📋 草莓大福後台管理</h2>
-
-<div class="admin-form">
-  <h3>➕ 管理員手動建單</h3>
-  姓名：<input type="text" id="newName" style="width:80px">
-  電話：<input type="text" id="newPhone" style="width:100px">
-  數量：<input type="number" id="newAmount" style="width:50px" value="1">
-  <button onclick="adminAddOrder()">新增訂單</button>
+<div class="admin-form" style="margin-bottom: 20px; border: 2px solid #ff69b4;">
+  <h3>⚙️ 每日限量設定</h3>
+  今日總量：<input type="number" id="maxInput" style="width:60px">
+  <button onclick="saveStock()">儲存設定</button>
+  <p id="currentStockHint" style="font-size: 0.8em; color: gray;"></p>
 </div>
 
-<table border="1">
-  <thead>
-    <tr>
-      <th>號碼</th><th>姓名</th><th>電話</th><th>數量</th><th>狀態</th><th>時間</th>
-    </tr>
-  </thead>
-  <tbody id="list"></tbody>
-</table>
-
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="./main.js"></script>
-
 <script>
+// 在 load() 函數中加入讀取庫存設定的邏輯
 async function load() {
+  // 1. 讀取庫存設定
+  const config = await getStockConfig();
+  document.getElementById("maxInput").value = config.max;
+
+  // 2. 讀取訂單 (原本的邏輯)
   const orders = await getOrders();
   const list = document.getElementById("list");
   list.innerHTML = "";
-
+  
+  // 計算已售出數量
+  let soldCount = 0;
   orders.forEach(o => {
+    soldCount += Number(o.amount);
+    // ... 這裡保留你原本表格渲染的 code ...
     const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${o.number}</td>
-      <td>${o.name}</td>
-      <td>${o.phone}</td>
-      <td>${o.amount}</td>
-      <td>
-        <select onchange="updateStatus('${o.id}', this.value)">
-          <option value="未取貨" ${o.status=="未取貨"?"selected":""}>未取貨</option>
-          <option value="已取貨" ${o.status=="已取貨"?"selected":""}>已取貨</option>
-        </select>
-      </td>
-      <td>${o.time?.toDate().toLocaleString() || "無時間"}</td>
-    `;
+    tr.innerHTML = `<td>${o.number}</td><td>${o.name}</td><td>${o.phone}</td><td>${o.amount}</td><td><select onchange="updateStatus('${o.id}', this.value)"><option value="未取貨" ${o.status=="未取貨"?"selected":""}>未取貨</option><option value="已取貨" ${o.status=="已取貨"?"selected":""}>已取貨</option></select></td><td>${o.time?.toDate().toLocaleString() || "無時間"}</td>`;
     list.appendChild(tr);
   });
+  
+  document.getElementById("currentStockHint").innerText = `目前已預約：${soldCount} 份 / 剩餘：${config.max - soldCount} 份`;
 }
 
-async function adminAddOrder() {
-  const data = {
-    name: document.getElementById("newName").value,
-    phone: document.getElementById("newPhone").value,
-    amount: Number(document.getElementById("newAmount").value)
-  };
-  if(!data.name || !data.phone) return alert("請填寫姓名電話");
-  
-  await createOrder(data);
-  alert("建單成功！");
+// 儲存設定的按鈕功能
+async function saveStock() {
+  const val = document.getElementById("maxInput").value;
+  await updateStockConfig(val);
+  alert("設定已更新！");
   location.reload();
 }
-
-load();
 </script>
-</body>
-</html>

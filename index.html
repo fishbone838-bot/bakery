@@ -90,14 +90,47 @@
     </main>
 
     <script>
-      // Toggle behavior for period selection
-      document.querySelectorAll('.toggle-group .toggle').forEach(btn=>{
-        btn.addEventListener('click', ()=>{
-          document.querySelectorAll('.toggle-group .toggle').forEach(b=>b.classList.remove('active'));
-          btn.classList.add('active');
-          const val = btn.getAttribute('data-value') || '';
-          document.getElementById('period').value = val;
-        });
+      // 讀取後台設定並更新今日庫存顯示
+      async function loadStockInfo(){
+        try{
+          const cfg = await getStockConfig();
+          const max = Number(cfg.max || 50);
+          document.getElementById('stockMax').innerText = max;
+
+          // 取得所有訂單並計算今天已售（不計已取消）
+          const orders = await getOrders();
+          const today = getTodayStr();
+          let sold = 0;
+          orders.forEach(o=>{
+            if(o.date === today && o.status !== '已取消') sold += Number(o.amount || 0);
+          });
+
+          const remain = Math.max(0, max - sold);
+          document.getElementById('stockCount').innerText = remain;
+
+          // 若已售罄，調整按鈕狀態
+          const submit = document.querySelector('.submit');
+          if (remain <= 0) {
+            submit.disabled = true;
+            submit.innerText = '今日已售罄';
+            submit.style.opacity = '0.7';
+            submit.style.cursor = 'not-allowed';
+          }
+        }catch(err){
+          console.error('無法載入庫存設定', err);
+          document.getElementById('stockCount').innerText = '--';
+          document.getElementById('stockMax').innerText = '--';
+        }
+      }
+
+      // 當前頁面有使用 main.js 的函式（getStockConfig, getOrders, getTodayStr）
+      // 等 DOM 與外部 script 準備好後執行
+      document.addEventListener('DOMContentLoaded', ()=>{
+        if(typeof getStockConfig === 'function'){
+          loadStockInfo();
+        } else {
+          console.warn('getStockConfig() not available yet');
+        }
       });
     </script>
   </body>

@@ -3,86 +3,133 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>草莓大福預約</title>
+  <title>🍓 草莓大福預約系統</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 500px; margin: auto; padding: 20px; line-height: 1.6; color: #333; }
+    h2 { color: #d02090; border-bottom: 2px solid #ffb6c1; padding-bottom: 10px; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; font-weight: bold; margin-bottom: 5px; }
+    input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 16px; }
+    button { width: 100%; padding: 12px; background-color: #ff69b4; color: white; border: none; border-radius: 4px; font-size: 18px; cursor: pointer; transition: 0.3s; }
+    button:hover { background-color: #ff1493; }
+    button:disabled { background-color: #ccc; cursor: not-allowed; }
+    #stockInfo { background: #fff0f5; padding: 10px; border-radius: 4px; font-weight: bold; text-align: center; margin-bottom: 20px; }
+    #msg { text-align: center; font-weight: bold; margin-top: 15px; }
+  </style>
 </head>
-<body style="font-family:sans-serif; max-width:500px; margin:auto; padding:20px;">
 
-<h2>🍓 草莓大福預約系統</h2>
-<p id="stockInfo">確認庫存中...</p>
+<body>
 
-<form id="orderForm">
-  <p>姓名：<br><input type="text" id="name" required></p>
-  <p>電話：<br><input type="tel" id="phone" required></p>
-  <p>數量：<br><input type="number" id="amount" min="1" required></p>
-  <button type="submit" id="submitBtn">送出預約</button>
-</form>
+  <h2>🍓 草莓大福預約系統</h2>
 
-<p id="msg" style="color: blue;"></p>
+  <div id="stockInfo">載入庫存中...</div>
 
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="./main.js"></script>
+  <form id="orderForm">
+    <div class="form-group">
+      <label for="name">姓名：</label>
+      <input type="text" id="name" placeholder="請輸入訂購人姓名" required>
+    </div>
 
-<script>
-const MAX_STOCK = 50; // 你可以在這裡修改限量總數
-const form = document.getElementById("orderForm");
-const msg = document.getElementById("msg");
+    <div class="form-group">
+      <label for="phone">連絡電話：</label>
+      <input type="tel" id="phone" placeholder="請輸入電話號碼" required>
+    </div>
 
-// 檢查庫存
-async function checkStock() {
-  // 1. 抓取限量設定
-  const config = await getStockConfig();
-  const MAX_STOCK = config.max;
+    <div class="form-group">
+      <label for="amount">數量：</label>
+      <input type="number" id="amount" min="1" value="1" required>
+    </div>
 
-  // 2. 只抓取「今天」的訂單
-  const today = getTodayStr(); // 呼叫剛寫好的函數
-  const snap = await db.collection("orders").where("date", "==", today).get();
-  
-  let totalSoldToday = 0;
-  snap.forEach(doc => {
-    totalSoldToday += Number(doc.data().amount);
-  });
-  
-  const remain = MAX_STOCK - totalSoldToday;
-  document.getElementById("stockInfo").innerText = `今日剩餘：${remain > 0 ? remain : 0} (今日總限量 ${MAX_STOCK} 份)`;
-  
-  if (remain <= 0) {
-    const btn = document.getElementById("submitBtn");
-    btn.disabled = true;
-    btn.innerText = "今日已售罄";
-  }
-  return remain;
-}
+    <button type="submit" id="submitBtn">送出預約</button>
+  </form>
 
-checkStock();
+  <p id="msg"></p>
 
-form.addEventListener("submit", async (e)=>{
-  e.preventDefault();
-  
-  const remain = await checkStock();
-  const inputAmount = Number(document.getElementById("amount").value);
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-  if (inputAmount > remain) {
-    alert("數量不足！目前只剩 " + remain + " 份");
-    return;
-  }
+  <script src="./main.js"></script>
 
-  const data = {
-    name: document.getElementById("name").value,
-    phone: document.getElementById("phone").value,
-    amount: inputAmount
-  };
+  <script>
+    const form = document.getElementById("orderForm");
+    const msg = document.getElementById("msg");
+    const submitBtn = document.getElementById("submitBtn");
+    const stockInfo = document.getElementById("stockInfo");
 
-  msg.innerText = "送出中...";
+    // 頁面開啟時先檢查庫存
+    async function checkStock() {
+      try {
+        // 1. 從資料庫抓取管理員設定的每日總量
+        const config = await getStockConfig();
+        const MAX_STOCK = config.max;
 
-  try {
-    const no = await createOrder(data);
-    location.href=`/success.html?no=${no}`;
-  } catch(err) {
-    alert("送出失敗：" + err.message);
-    msg.innerText = "";
-  }
-});
-</script>
+        // 2. 抓取「今天」已下單的總數
+        const today = getTodayStr();
+        const snap = await db.collection("orders").where("date", "==", today).get();
+        
+        let totalSoldToday = 0;
+        snap.forEach(doc => {
+          totalSoldToday += Number(doc.data().amount || 0);
+        });
+
+        const remain = MAX_STOCK - totalSoldToday;
+        
+        // 3. 更新介面顯示
+        stockInfo.innerText = `今日剩餘：${remain > 0 ? remain : 0} 份 (每日限定 ${MAX_STOCK} 份)`;
+
+        if (remain <= 0) {
+          submitBtn.disabled = true;
+          submitBtn.innerText = "今日已售罄，明天請早";
+          stockInfo.style.color = "red";
+          return 0;
+        }
+        return remain;
+      } catch (err) {
+        console.error("檢查庫存失敗:", err);
+        stockInfo.innerText = "無法取得庫存資訊";
+        return 0;
+      }
+    }
+
+    // 初始化檢查
+    checkStock();
+
+    // 處理表單送出
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      // 送出前再次即時檢查庫存
+      const remain = await checkStock();
+      const inputAmount = Number(document.getElementById("amount").value);
+
+      if (inputAmount > remain) {
+        alert(`抱歉，庫存不足！目前只剩 ${remain} 份。`);
+        return;
+      }
+
+      // 準備資料
+      const data = {
+        name: document.getElementById("name").value,
+        phone: document.getElementById("phone").value,
+        amount: inputAmount
+      };
+
+      submitBtn.disabled = true;
+      msg.innerText = "🚀 訂單傳送中，請稍候...";
+      msg.style.color = "blue";
+
+      try {
+        // 呼叫 main.js 裡的建立訂單功能
+        const no = await createOrder(data);
+        // 跳轉到成功頁面並帶上號碼牌
+        location.href = `/success.html?no=${no}`;
+      } catch (err) {
+        alert("預約失敗，請聯絡店家：" + err.message);
+        msg.innerText = "";
+        submitBtn.disabled = false;
+      }
+    });
+  </script>
+
 </body>
 </html>

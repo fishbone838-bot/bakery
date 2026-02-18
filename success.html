@@ -26,11 +26,10 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 32px;
     }
 
     .card {
-      width: 100%;
+      width: 80%;
       max-width: 420px;
       background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.96));
       border-radius: var(--card-radius);
@@ -67,12 +66,14 @@
       margin: 10px 0 0px;
       font-size: 20px;
       color: var(--deep);
+      text-align: start;
     }
 
     p.subtitle {
       margin: 10px 0px 10px 0px;
       color: #6b6156;
       font-size: 16px;
+      text-align: start;
     }
 
     .result {
@@ -101,10 +102,6 @@
     }
 
     @media (max-width:420px) {
-      body {
-        padding: 16px
-      }
-
       .card {
         padding: 18px
       }
@@ -123,7 +120,7 @@
       </div>
     </div>
 
-    <h2>✅ 預約成功</h2>
+    <h2>預約成功</h2>
 
     <p id="no" class="result">你的號碼牌是：—</p>
     <p class="note">狀態：未取貨</p>

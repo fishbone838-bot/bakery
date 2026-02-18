@@ -51,8 +51,8 @@
     }
 
     .logo {
-      width: 56px;
-      height: 56px;
+      width: 80px;
+      height: 80px;
       border-radius: 8px;
       background: linear-gradient(135deg, #e9e1d6, #d9cdb7);
       display: flex;
@@ -66,13 +66,13 @@
 
     h1.title {
       font-family: 'Noto Serif TC', serif;
-      margin: 6px 0 18px;
+      margin: 10px 0 0px;
       font-size: 20px;
       color: var(--deep);
     }
 
     p.subtitle {
-      margin: 0 0 18px;
+      margin: 10px 0px 10px 0px;
       color: #6b6156;
       font-size: 16px
     }
@@ -168,6 +168,15 @@
       text-align: center;
     }
 
+    /* 讓 stockInfo 使用指定木質色並加粗 */
+    #stockInfo {
+      color: rgb(137, 113, 74);
+      font-weight: 600;
+      font-size: 16px;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
     /* responsive */
     @media (max-width:420px) {
       body {
@@ -185,7 +194,7 @@
 
   <main class="card" role="main">
     <div class="brand">
-      <div class="logo">和</div>
+      <div class="logo">琴</div>
       <div>
         <h1 class="title">草莓大福 預約系統</h1>
         <p class="subtitle">預約新鮮職人手作草莓大福，限量販售</p>
@@ -252,7 +261,7 @@
           if (remain <= 0) {
             submitBtn.disabled = true;
             submitBtn.innerText = "今日已售罄，明天請早";
-            stockInfo.style.color = "red";
+            stockInfo.style.color = "#e03e2d";
             return 0;
           }
           return remain;
